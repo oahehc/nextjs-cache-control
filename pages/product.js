@@ -23,9 +23,9 @@ export const getServerSideProps = async ({ res }) => {
   if (res) {
     res.setHeader(
       "Cache-Control",
-      "public, max-age=0, stale-while-revalidate=10, must-revalidate"
+      "public, max-age=10, stale-while-revalidate=20"
     );
-    res.setHeader("ETag", generateETag(20));
+    res.setHeader("ETag", generateETag(30));
   }
 
   return { props: {} };

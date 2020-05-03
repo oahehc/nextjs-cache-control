@@ -22,7 +22,7 @@ export default Tos;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    res.setHeader("Cache-Control", "max-age=30, immutable");
+    res.setHeader("Cache-Control", "public, max-age=30, immutable");
     res.setHeader("ETag", generateETag());
   }
 
