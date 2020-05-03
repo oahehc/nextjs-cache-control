@@ -1,4 +1,5 @@
 import React from "react";
+import etag from "etag";
 import Nav from "../components/nav";
 import styles from "../styles/styles";
 
@@ -21,7 +22,10 @@ export default List;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
+    const etagKey = `list_${Date.now()}`;
+
     res.setHeader("Cache-Control", "max-age=0");
+    res.setHeader("ETag", etag(etagKey));
   }
 
   return { props: {} };

@@ -1,4 +1,5 @@
 import React from "react";
+import etag from "etag";
 import Nav from "../components/nav";
 import styles from "../styles/styles";
 
@@ -21,6 +22,7 @@ export default Product;
 export const getServerSideProps = async ({ res }) => {
   if (res) {
     res.setHeader("Cache-Control", "max-age=0, stale-while-revalidate=60");
+    res.setHeader("ETag", etag("Product"));
   }
 
   return { props: {} };
