@@ -9,8 +9,8 @@ const Tos = () => (
     <div className="hero">
       <h1 className="title">Terms of service</h1>
       <p className="description">
-        Terms of service is usually not change. <br />
-        So we can provide a longer max-age or even add immutable property to
+        The terms of service are usually not changed. <br />
+        So we can provide a longer max-age or even add an immutable property to
         save the bandwidth.
       </p>
     </div>

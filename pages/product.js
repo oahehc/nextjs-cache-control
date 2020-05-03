@@ -9,8 +9,8 @@ const Product = () => (
     <div className="hero">
       <h1 className="title">Product Page</h1>
       <p className="description">
-        Product page is not changed frequently. <br />
-        So we can set the stale-while-revalidate which allow the browser use
+        The product page is not changed frequently. <br />
+        So we can set the stale-while-revalidate which allows the browser to use
         stale content and revalidate in the background.
       </p>
     </div>
