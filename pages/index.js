@@ -1,6 +1,6 @@
 import React from "react";
 import Nav from "../components/nav";
-import styles from "./styles";
+import styles from "../styles/styles";
 
 const Home = () => (
   <div>
