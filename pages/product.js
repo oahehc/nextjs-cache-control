@@ -21,7 +21,10 @@ export default Product;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    res.setHeader("Cache-Control", "max-age=0, stale-while-revalidate=10");
+    res.setHeader(
+      "Cache-Control",
+      "public, max-age=0, stale-while-revalidate=10, must-revalidate"
+    );
     res.setHeader("ETag", generateETag(20));
   }
 

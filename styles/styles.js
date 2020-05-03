@@ -19,4 +19,14 @@ export default css`
   .description {
     line-height: 1.5rem;
   }
+  .gallery {
+    display: flex;
+    justify-content: center;
+  }
+  .gallery > figure {
+    width: 40%;
+  }
+  .gallery img {
+    width: 100%;
+  }
 `;
