@@ -1,5 +1,4 @@
 import React from "react";
-import generateETag from "../utils/generateETag";
 import Nav from "../components/nav";
 import styles from "../styles/styles";
 
@@ -23,7 +22,6 @@ export default Tos;
 export const getServerSideProps = async ({ res }) => {
   if (res) {
     res.setHeader("Cache-Control", "public,max-age=30,immutable");
-    res.setHeader("ETag", generateETag());
   }
 
   return { props: {} };
