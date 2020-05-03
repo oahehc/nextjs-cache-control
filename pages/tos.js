@@ -2,26 +2,26 @@ import React from "react";
 import Nav from "../components/nav";
 import styles from "./styles";
 
-const Home = () => (
+const Tos = () => (
   <div>
     <Nav />
     <div className="hero">
-      <h1 className="title">List Page</h1>
+      <h1 className="title">Terms of service</h1>
       <p className="description">
-        The list page might change frequently. <br />
-        Therefore, we should revalidate the cache is staled or not on every
-        request.
+        Terms of service is usually not change. <br />
+        So we can provide a longer max-age or even add immutable property to
+        save the bandwidth.
       </p>
     </div>
     <style jsx>{styles}</style>
   </div>
 );
 
-export default Home;
+export default Tos;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    res.setHeader("Cache-Control", "max-age=0");
+    res.setHeader("Cache-Control", "max-age=60, immutable");
   }
 
   return { props: {} };
