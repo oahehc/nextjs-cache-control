@@ -22,8 +22,6 @@ export default List;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    // res.setHeader("age", 2);
-    // res.setHeader("date", "Sun, 03 May 2020 12:32:41 GMT");
     res.setHeader("Cache-Control", "public,max-age=0,must-revalidate");
     res.setHeader("ETag", generateETag(10));
   }
