@@ -8,7 +8,7 @@ const Lambda = () => (
     <div className="hero">
       <h1 className="title">server-side renders</h1>
       <p className="description">
-        server-side renders at runtime (uses getInitialProps or
+        λ (Lambda) server-side renders at runtime (uses getInitialProps or
         getServerSideProps)
       </p>
     </div>

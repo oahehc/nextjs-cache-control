@@ -2,21 +2,17 @@ import React from "react";
 import Nav from "../components/nav";
 import styles from "../styles/styles";
 
-const SSG = () => (
+const Static = () => (
   <div>
     <Nav />
     <div className="hero">
-      <h1 className="title">server-side generated</h1>
+      <h1 className="title">Static</h1>
       <p className="description">
-        automatically generated as static HTML + JSON (uses getStaticProps)
+        ○ (Static) automatically rendered as static HTML (uses no initial props)
       </p>
     </div>
     <style jsx>{styles}</style>
   </div>
 );
 
-export default SSG;
-
-export const getStaticProps = async () => {
-  return { props: {} };
-};
+export default Static;

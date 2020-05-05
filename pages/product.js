@@ -21,8 +21,8 @@ export default Product;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    res.setHeader("Cache-Control", "public,max-age=20");
-    // res.setHeader("ETag", generateETag(30));
+    res.setHeader("Cache-Control", "private,max-age=10");
+    res.setHeader("ETag", generateETag(20));
   }
 
   return { props: {} };

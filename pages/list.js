@@ -22,7 +22,7 @@ export default List;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    res.setHeader("Cache-Control", "public,max-age=0,must-revalidate");
+    res.setHeader("Cache-Control", "private,max-age=0,must-revalidate");
     res.setHeader("ETag", generateETag(10));
   }
 

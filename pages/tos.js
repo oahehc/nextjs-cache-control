@@ -21,7 +21,7 @@ export default Tos;
 
 export const getServerSideProps = async ({ res }) => {
   if (res) {
-    res.setHeader("Cache-Control", "public,max-age=30,immutable");
+    res.setHeader("Cache-Control", "private,max-age=30,immutable");
   }
 
   return { props: {} };

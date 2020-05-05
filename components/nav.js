@@ -1,6 +1,20 @@
 import React from "react";
 import Link from "next/link";
 
+export const Links = [
+  { href: "/static", name: "static", desc: "" },
+  { href: "/lambda", name: "lambda", desc: "" },
+  { href: "/ssg", name: "ssg", desc: "" },
+  { href: "/images", name: "images", desc: "page with images" },
+  {
+    href: "/list",
+    name: "list",
+    desc: "Always Revalidation",
+  },
+  { href: "/product", name: "product", desc: "max-age=10 with etag" },
+  { href: "/tos", name: "tos", desc: "Long Term Caching" },
+];
+
 const Nav = () => (
   <nav>
     <ul>
@@ -10,21 +24,13 @@ const Nav = () => (
         </Link>
       </li>
       <ul>
-        <li>
-          <Link href="/list">
-            <a>List</a>
-          </Link>
-        </li>
-        <li>
-          <Link href="/product">
-            <a>Product</a>
-          </Link>
-        </li>
-        <li>
-          <Link href="/tos">
-            <a>Terms of service</a>
-          </Link>
-        </li>
+        {Links.map(({ href, name }) => (
+          <li key={href}>
+            <Link href={href}>
+              <a>{name}</a>
+            </Link>
+          </li>
+        ))}
       </ul>
     </ul>
 
