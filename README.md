@@ -1,234 +1,155 @@
-This project was bootstrapped with [Create Next App](https://github.com/segmentio/create-next-app).
+# nextjs-cache-control
 
-Find the most recent version of this guide at [here](https://github.com/segmentio/create-next-app/blob/master/lib/templates/default/README.md). And check out [Next.js repo](https://github.com/zeit/next.js) for the most up-to-date info.
+<quote>
+As a web developer, we spend lots of time minimizing our files and API response in order to allow our customers to have a better user experience. What if we can make it better by reducing the response to just a few hundred bytes or even zero? Implementing a better cache control policy will help us to reach that goal. In this article, I will list a few strategies about how to properly set the response header to allow the browser to handle the cache for us.
+</quote>
 
-## Table of Contents
+## Agenda
 
-- [Questions? Feedback?](#questions-feedback)
-- [Folder Structure](#folder-structure)
-- [Available Scripts](#available-scripts)
-  - [npm run dev](#npm-run-dev)
-  - [npm run build](#npm-run-build)
-  - [npm run start](#npm-run-start)
-- [Using CSS](#using-css)
-- [Adding Components](#adding-components)
-- [Fetching Data](#fetching-data)
-- [Custom Server](#custom-server)
-- [Syntax Highlighting](#syntax-highlighting)
-- [Using the `static` Folder](#using-the-static-folder)
-- [Deploy to Now](#deploy-to-now)
-- [Something Missing?](#something-missing)
+- [Gotchas](#gatchas)
+- [HTTP header - Cache-Control](#cache-control)
+- [HTTP header - ETag](#etag)
+- [Cache Strategies](#strategies)
+- [Benefits](#benefits)
 
-## Questions? Feedback?
+### Gotchas <a name="gatchas"></a>
 
-Check out [Next.js FAQ & docs](https://github.com/zeit/next.js#faq) or [let us know](https://github.com/segmentio/create-next-app/issues) your feedback.
+Before we start, there are a few gotchas I want to point out first.
 
-## Folder Structure
+1. When we are testing our cache setting, pressing "enter" on the address bar rather than refresh page with F5. Because some browsers will send the request with header `Cache-Control max-age=0` and overwrite our cache policy when we refresh the page. Check [here](https://stackoverflow.com/questions/18557251/why-does-browser-still-sends-request-for-cache-control-public-with-max-age) for more information.
+2. Not all CDN providers follow the cache-control header (eg. some CDN providers follow `max-age` rather than `s-maxage`), you might want to check with your CDN provider before you start modifying the settings.
 
-After creating an app, it should look something like:
+### HTTP header - Cache-Control <a name="cache-control"></a>
+
+There are tons of settings for cache-control. To make this article easier to understand, here I only mention the attributes that I'm going to apply to my examples. If you're interested to know more about that. You can check [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) to gain more information.
+
+#### Cacheability
+
+- public: The response can be stored by proxy or browser
+- no-cache: The response can be stored by proxy or browser, but the stored response MUST always go through validation with the origin server first before using it.
+
+#### Expiration
+
+- max-age: The maximum amount of time a resource is considered fresh.
+- s-maxage: Overrides max-age or the Expires header, but only for shared caches (e.g., proxies).
+
+#### Revalidation and reloading
+
+- must-revalidate: Indicates that once a resource becomes stale, caches must not use their stale copy without successful validation on the origin server.
+- immutable: Indicates that the response body will not change over time. The resource, if unexpired, is unchanged on the server and therefore the client should not send a conditional revalidation for it.
+
+### HTTP header - ETag <a name="etag"></a>
+
+The ETag HTTP response header is an identifier for a specific version of a resource. It lets caches be more efficient and save bandwidth, as a web server does not need to resend a full response if the content has not changed.
+
+|                      | Request                                 | Response                                                   |
+| -------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| 1st request          | GET /                                   | 200 OK<br>Cache-Control: max-age=0<br>ETag: W/"a46ba20afd" |
+| ETag haven't changed | GET / <br>If-None-Match: W/"a46ba20afd" | 304 Not Modified                                           |
+| ETag was changed     | GET / <br>If-None-Match: W/"a46ba20afd" | 200 OK<br>Cache-Control: max-age=0<br>ETag: W/"7a48833148" |
+
+Another use case about `ETag` is avoiding `mid-air collisions`, it's not related to cache control so I won't dive into that. Check [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) if you're interested.
+
+### Cache Strategies <a name="strategies"></a>
+
+Apply cache can not only save the bandwidth but also prevent the latency to allow the user to get the result faster.
+But at the same time, we also want to make sure our users can always see the latest version of the application. Therefore, it's extremely important to config the cache control header properly. Normally, we need to base on the type of our pages and files to apply different cache strategies. Here I list a few types of the setting for different scenarios.
+
+#### 1. Always Revalidation
+
+If the page is changed frequently, like the list page for the e-commerce website. Then we should let the user check if there is any new information on every request. Therefore, we can set the cache-control as below.
 
 ```
-.
-├── README.md
-├── components
-│   ├── head.js
-│   └── nav.js
-├── next.config.js
-├── node_modules
-│   ├── [...]
-├── package.json
-├── pages
-│   └── index.js
-├── static
-│   └── favicon.ico
-└── yarn.lock
+Cache-Control: public, max-age=0, must-revalidate;
 ```
 
-Routing in Next.js is based on the file system, so `./pages/index.js` maps to the `/` route and
-`./pages/about.js` would map to `/about`.
+The behavior will looks like the table below.
 
-The `./static` directory maps to `/static` in the `next` server, so you can put all your
-other static resources like images or compiled CSS in there.
+|                                        | Request                                 | Response                       |
+| -------------------------------------- | --------------------------------------- | ------------------------------ |
+| 1st request                            | GET /                                   | 200 OK<br>ETag: W/"a46ba20afd" |
+| next request and ETag haven't changed  | GET / <br>If-None-Match: W/"a46ba20afd" | 304 Not Modified               |
+| another request after ETag was changed | GET / <br>If-None-Match: W/"a46ba20afd" | 200 OK<br>ETag: W/"7a48833148" |
 
-Out of the box, we get:
+You can play around with this [demo page](https://nextjs-cache-control.now.sh/list). The `etag` will change every 10 seconds.  
+![Always Revalidation](https://i.imgur.com/WTVOBIV.png)
 
-- Automatic transpilation and bundling (with webpack and babel)
-- Hot code reloading
-- Server rendering and indexing of `./pages`
-- Static file serving. `./static/` is mapped to `/static/`
+#### 2. Long Term Caching
 
-Read more about [Next's Routing](https://github.com/zeit/next.js#routing)
+For some content that is hardly changed, then we can set a longer max-age and add the immutable property. This will allow the browser to use the catch from disk or memory if the age is within the range. Therefore, we can prevent sending an unnecessary request for saving bandwidth and also reduce the latency.
 
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm run dev`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-You will also see any errors in the console.
-
-### `npm run build`
-
-Builds the app for production to the `.next` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-### `npm run start`
-
-Starts the application in production mode.
-The application should be compiled with \`next build\` first.
-
-See the section in Next docs about [deployment](https://github.com/zeit/next.js/wiki/Deployment) for more information.
-
-## Using CSS
-
-[`styled-jsx`](https://github.com/zeit/styled-jsx) is bundled with next to provide support for isolated scoped CSS. The aim is to support "shadow CSS" resembling of Web Components, which unfortunately [do not support server-rendering and are JS-only](https://github.com/w3c/webcomponents/issues/71).
-
-```jsx
-export default () => (
-  <div>
-    Hello world
-    <p>scoped!</p>
-    <style jsx>{`
-      p {
-        color: blue;
-      }
-      div {
-        background: red;
-      }
-      @media (max-width: 600px) {
-        div {
-          background: blue;
-        }
-      }
-    `}</style>
-  </div>
-)
+```
+Cache-Control: public, max-age=604800, immutable;
 ```
 
-Read more about [Next's CSS features](https://github.com/zeit/next.js#css).
+The behavior will looks like the table below.
 
-## Adding Components
+|                | Request | Response              |
+| -------------- | ------- | --------------------- |
+| 1st request    | GET /   | 200 OK                |
+| within max-age | N/A     | 200 (from disk cache) |
+| over max-age   | GET /   | 200 OK                |
 
-We recommend keeping React components in `./components` and they should look like:
+You can play around with this [demo page](https://nextjs-cache-control.now.sh/tos). The `max-age` is 30 seconds.  
+![Long Term Caching](https://i.imgur.com/wcN4PrT.png)
 
-### `./components/simple.js`
+`Long Term Caching` is suited for static files like javascript, css, or images. But what if we need to change it within the max-age? Normally, when we apply the `Long Term Caching`, we will add a hash string into the file name (eg. filename.[hash].js), So we can force the browser request the new file when we change the content.
 
-```jsx
-const Simple = () => <div>Simple Component</div>
+### Benefits <a name="benefits"></a>
 
-export default Simple // don't forget to export default!
-```
+Now let's talk about the benefits of cache-control. The biggest reward will be the cost-saving on the bandwidth. In reference to [AWS CloudFront](https://aws.amazon.com/cloudfront/pricing/?nc1=h_ls), the transmission cost is around \$ 0.1/GB. But how much bandwidth can we save after applying a different cache-control policy?
 
-### `./components/complex.js`
+#### 1. Always Revalidation
 
-```jsx
-import { Component } from 'react'
+If we apply the `Always Revalidation` policy, our server will respond 304 rather than the full content if the browser already has the latest content and the content isn't changed. Therefore, the bandwidth we can save is based on how many users will revisit the website and how often the content changes.
 
-class Complex extends Component {
-  state = {
-    text: 'World'
-  }
+For example, if our website's content changes once per week. And every week, about 10% of pageview is coming from the revisit user. Then the total bandwidth we can save will be around 10% (if we ignore 304 response size).
 
-  render() {
-    const { text } = this.state
-    return <div>Hello {text}</div>
-  }
-}
+#### 2. Long Term Caching
 
-export default Complex // don't forget to export default!
-```
+If we apply the `Long Term Caching` policy, the browser will use the cache directly without sending the validating request. So we save more bandwidth. The drawback is that we will have to change the file name if we need to change the content within the cache time (max-age).
 
-## Fetching Data
+#### Example
 
-You can fetch data in `pages` components using `getInitialProps` like this:
+If you still feel a little confused about cache-control, let me try to explain in an example.
+If our website has only one page. It contents one html, one css and one javascript file. And Bob is our loyal user who needs to reference the information on our website every day.
 
-### `./pages/stars.js`
+1. The content change about one time per week (change html)
+2. We release a new version every week (change html, css, js)
+3. We upgrade third party libraries every half year (change js )
 
-```jsx
-const Page = props => <div>Next stars: {props.stars}</div>
+The table below is how many times Bob needs to download our files in a year. We can see how much bandwidth we can save after applying a better cache-control policy.
 
-Page.getInitialProps = async ({ req }) => {
-  const res = await fetch('https://api.github.com/repos/zeit/next.js')
-  const json = await res.json()
-  const stars = json.stargazers_count
-  return { stars }
-}
+|            |  size | without cache  | Always Revalidation | Long Term Caching |
+| ---------- | ----: | :------------: | :-----------------: | :---------------: |
+| index.html |  50KB |     \*365      |        \*52         |       \*52        |
+| index.css  |  50KB |     \*365      |        \*52         |       \*12        |
+| index.js   | 100KB |     \*365      |        \*52         |       \*12        |
+| Total      |       | 71.29MB (100%) |   10.16MB (14.2%)   |    4.3MB (6%)     |
 
-export default Page
-```
+Moreover, because we only update third party libraries twice per year, so if we separate our javascript file into two files, one is our own script - main.js, another is third party library - vendor.js. Then we will be able to save more bandwidth. You can search `code-splitting` to get more information about it.
 
-For the initial page load, `getInitialProps` will execute on the server only. `getInitialProps` will only be executed on the client when navigating to a different route via the `Link` component or using the routing APIs.
+|            |      | Long Term Caching<br> + code splitting |
+| ---------- | ---: | :------------------------------------: |
+| index.html | 50KB |                  \*52                  |
+| index.css  | 50KB |                  \*12                  |
+| main.js    | 50KB |                  \*12                  |
+| vendor.js  | 50KB |                  \*2                   |
+| Total      |      |              3.8MB (5.3%)              |
 
-_Note: `getInitialProps` can **not** be used in children components. Only in `pages`._
+---
 
-Read more about [fetching data and the component lifecycle](https://github.com/zeit/next.js#fetching-data-and-component-lifecycle)
+## Conclusion
 
-## Custom Server
+That's all. Thanks for reading, I hope this article can help you have a better understanding of cache-control.
 
-Want to start a new app with a custom server? Run `create-next-app --example customer-server custom-app`
+--
 
-Typically you start your next server with `next start`. It's possible, however, to start a server 100% programmatically in order to customize routes, use route patterns, etc
+## Reference
 
-This example makes `/a` resolve to `./pages/b`, and `/b` resolve to `./pages/a`:
-
-```jsx
-const { createServer } = require('http')
-const { parse } = require('url')
-const next = require('next')
-
-const dev = process.env.NODE_ENV !== 'production'
-const app = next({ dev })
-const handle = app.getRequestHandler()
-
-app.prepare().then(() => {
-  createServer((req, res) => {
-    // Be sure to pass `true` as the second argument to `url.parse`.
-    // This tells it to parse the query portion of the URL.
-    const parsedUrl = parse(req.url, true)
-    const { pathname, query } = parsedUrl
-
-    if (pathname === '/a') {
-      app.render(req, res, '/b', query)
-    } else if (pathname === '/b') {
-      app.render(req, res, '/a', query)
-    } else {
-      handle(req, res, parsedUrl)
-    }
-  }).listen(3000, err => {
-    if (err) throw err
-    console.log('> Ready on http://localhost:3000')
-  })
-})
-```
-
-Then, change your `start` script to `NODE_ENV=production node server.js`.
-
-Read more about [custom server and routing](https://github.com/zeit/next.js#custom-server-and-routing)
-
-## Syntax Highlighting
-
-To configure the syntax highlighting in your favorite text editor, head to the [relevant Babel documentation page](https://babeljs.io/docs/editors) and follow the instructions. Some of the most popular editors are covered.
-
-## Deploy to Now
-
-[now](https://zeit.co/now) offers a zero-configuration single-command deployment.
-
-1.  Install the `now` command-line tool either via the recommended [desktop tool](https://zeit.co/download) or via node with `npm install -g now`.
-
-2.  Run `now` from your project directory. You will see a **now.sh** URL in your output like this:
-
-    ```
-    > Ready! https://your-project-dirname-tpspyhtdtk.now.sh (copied to clipboard)
-    ```
-
-    Paste that URL into your browser when the build is complete, and you will see your deployed app.
-
-You can find more details about [`now` here](https://zeit.co/now).
-
-## Something Missing?
-
-If you have ideas for how we could improve this readme or the project in general, [let us know](https://github.com/segmentio/create-next-app/issues) or [contribute some!](https://github.com/segmentio/create-next-app/edit/master/lib/templates/default/README.md)
+- [Cache-Control](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
+- [ETag](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)
+- [Keeping things fresh with stale-while-revalidate](https://web.dev/stale-while-revalidate/)
+- [HTTP Caching](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/http-caching)
+- [Long Term Caching](https://developers.google.com/web/fundamentals/performance/webpack/use-long-term-caching)
+- [Why does Browser still sends request for cache-control public with max-age?](https://stackoverflow.com/questions/18557251/why-does-browser-still-sends-request-for-cache-control-public-with-max-age)
