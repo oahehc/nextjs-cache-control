@@ -129,13 +129,13 @@ The table below is how many times Bob needs to download our files in a year. We 
 
 Moreover, because we only update third party libraries twice per year, so if we separate our javascript file into two files, one is our own script - main.js, another is third party library - vendor.js. Then we will be able to save more bandwidth. You can search `code-splitting` to get more information about it.
 
-|            |      | Long Term Caching<br> + code splitting |
-| ---------- | ---: | :------------------------------------: |
-| index.html | 50KB |                  \*52                  |
-| index.css  | 50KB |                  \*12                  |
-| main.js    | 50KB |                  \*12                  |
-| vendor.js  | 50KB |                  \*2                   |
-| Total      |      |              3.8MB (5.3%)              |
+|            |      | Long Term Caching + code splitting |
+| ---------- | ---: | :--------------------------------: |
+| index.html | 50KB |                \*52                |
+| index.css  | 50KB |                \*12                |
+| main.js    | 50KB |                \*12                |
+| vendor.js  | 50KB |                \*2                 |
+| Total      |      |            3.8MB (5.3%)            |
 
 ---
 
